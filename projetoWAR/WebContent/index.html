@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title></title>
+</head>
+<body>
+<script>
+
+	var pagina_inicial = "menu.xhtml";
+	var href = window.location.href;
+	href = href.replace("index.html", "");
+	if(!href.includes("faces")) href += "faces/";
+	href += pagina_inicial;
+	console.log("Redirecionando para: " + href);
+	if(href.includes("faces")) location.replace(href);
+	
+	
+</script>
+</body>
+</html>
