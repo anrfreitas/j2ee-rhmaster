@@ -1,0 +1,156 @@
+<html>
+<head>
+	<title>Rest HTML</title>
+	
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" crossorigin="anonymous">
+	<link href="https://cdn.datatables.net/buttons/1.6.0/css/buttons.dataTables.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+
+<body>
+
+<br />
+
+<div class="col-md-12">
+
+<h2>Relatório de clientes</h2>
+<p><b>Endereço do webservice:</b> <a class="text-dark" href="http://localhost:8080/projetoWAR/rest/clientes">http://localhost:8080/projetoWAR/rest/clientes</a></p>
+
+<br />
+
+<table id="tabelaRelatorioREST" class="table table-striped table-bordered">
+	<thead>
+	  <tr>
+		<th>#</th>
+		<th>Nome</th>
+		<th>Telefone</th>
+		<th>Profissão</th>
+	  </tr>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
+</div>
+
+<div class="col col-md-12">
+	<div id="buttons_dt"></div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.0/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.0/js/buttons.flash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.0/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.0/js/buttons.print.min.js"></script>
+
+<script>
+	
+	var table;
+	
+	$(document).ready(function() {
+				
+			table = $('#tabelaRelatorioREST').DataTable( {
+				"language": {
+				"sEmptyTable": "Nenhum registro encontrado",
+				"sInfo": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+				"sInfoEmpty": "Mostrando 0 até 0 de 0 registros",
+				"sInfoFiltered": "(Filtrados de _MAX_ registros)",
+				"sInfoPostFix": "",
+				"sInfoThousands": ".",
+				"sLengthMenu": "_MENU_ resultados por página",
+				"sLoadingRecords": "Carregando...",
+				"sProcessing": "Processando...",
+				"sZeroRecords": "Nenhum registro encontrado",
+				"sSearch": "Pesquisar",
+				"oPaginate": {"sNext": "Próximo", "sPrevious": "Anterior", "sFirst": "Primeiro", "sLast": "Último"},
+				"oAria": {"sSortAscending": ": Ordenar colunas de forma ascendente", "sSortDescending": ": Ordenar colunas de forma descendente" }}
+			} );
+
+			var buttons = new $.fn.dataTable.Buttons('#tabelaRelatorioREST', {
+				buttons: [
+						{
+							extend: "",
+							className: "btn btn-info mr-2",
+							titleAttr: 'Recarregar',
+							text: 'Recarregar',
+							action: function(api, node, config) {
+								location.reload();
+							}
+						},
+						{
+							extend: "excelHtml5",
+							className: "btn btn-success mr-2",
+							titleAttr: 'Exportar para Excel',
+							text: 'Exportar para Excel',
+							init: function(api, node, config) {
+							   $(node).removeClass('btn-default')
+							}
+						},
+						{
+							extend: "pdfHtml5",
+							customize: function (doc) {
+								doc.styles.tableHeader.alignment = 'left'; /* giustifica a sinistra titoli colonne */
+								doc.content[1].table.widths = 
+									Array(doc.content[1].table.body[0].length + 1).join('*').split('');
+							  },
+							orientation: 'landscape', /* orientamento stampa */
+							pageSize: 'A4', /* formato stampa */
+							exportOptions: { /* quali colonne vengono mandate in stampa (indice posizionale) */
+									columns: [ 0,1,2,3 ]
+								},
+							className: "btn btn-danger mr-2",
+							title: 'Relatório REST',
+							titleAttr: 'Relatório REST',
+							text: 'Exportar para PDF',
+							init: function(api, node, config) {
+							   $(node).removeClass('btn-default')
+							}
+						},
+				  ]
+			}).container().appendTo($('#buttons_dt'));
+			
+			carregarItens();
+	});
+	
+	function carregarItens(){
+		
+		//URL do REST JSON
+		var url = "http://localhost:8080/projetoWAR/rest/clientes";
+
+		//Capturar Dados Usando Método AJAX do jQuery
+		$.ajax({
+			type: "GET", 
+			url: url,
+			timeout: 3000,
+			contentType: "application/json",
+			cache: false,
+			success: function(clientes) {
+				
+				// Listando cada cliente encontrado na lista...
+				$.each(clientes,function(i, cliente){
+					
+					var id = cliente.id;
+					var nome = cliente.nome;
+					var telefone = cliente.telefone;
+					var profissao = cliente.profissao.nome;
+					
+					table.row.add([id,nome,telefone,profissao]).draw(false);
+					
+				});
+			} 
+		});  
+	}
+</script>
+
+</body>
+</html>
